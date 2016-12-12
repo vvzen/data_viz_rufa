@@ -1,0 +1,95 @@
+/** GOOGLE FONTS */
+
+@import url('https://fonts.googleapis.com/css?family=Nunito+Sans');
+
+/** SVG ELEMENTS */
+
+svg {
+    background: #041B3D;
+}
+
+svg .bar-text {
+    fill: rgb(255, 255, 255);
+    font-family: 'Nunito Sans' sans-serif;
+    font-size: 11px;
+}
+
+svg .italy {
+    fill: #f00;
+    stroke: #1a0808;
+    stroke-width: 1;
+}
+
+svg .hotspot-text {
+    fill: #ffffff;
+    font-family: 'Nunito Sans', sans-serif;
+    font-size: 20px;
+}
+
+svg .ui-text {
+    fill: rgb(255, 255, 255);
+    font-family: 'Nunito Sans', sans-serif;
+    font-size: 20px;
+    padding: 4px;
+}
+
+svg .ui-text-city {
+    fill: #E3E41E;
+    font-family: 'Nunito Sans', sans-serif;
+    font-size: 20px;
+    padding: 4px;
+}
+
+svg .bus-stop-circle {
+    shape-rendering: crispEdges;
+}
+
+svg .bus-stop-circle-over {
+    fill: #fff;
+    shape-rendering: crispEdges;
+}
+
+svg .street {
+    fill: none;
+    stroke-width: 0.3;
+    stroke: #1ec0d0;
+}
+
+svg .crash-spot {
+    fill: rgb(227, 15, 40);
+}
+
+svg .transport-hotspots {
+    fill: rgb(43, 99, 207);
+}
+
+svg .transport-hotspots-over {
+    fill: rgb(48, 212, 241);
+}
+
+.axis path, .axis line {
+    fill: none;
+    stroke: black;
+    shape-rendering: crispEdges;
+}
+
+.axis text {
+    font-family: sans-serif;
+    font-size: 11px;
+}
+
+
+/** HEATMAP */
+
+#heatmapContainerWrapper {
+    width: 100%;
+    height: 100%;
+    position: absolute;
+    pointer-events: none;
+}
+
+#heatmapContainer {
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
+}

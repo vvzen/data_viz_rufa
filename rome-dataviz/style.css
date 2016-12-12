@@ -1,0 +1,46 @@
+div.bar {
+    display: inline-block;
+    width: 20px;
+    height: 80px;
+    background-color: teal;
+    margin: 2px;
+}
+
+svg {
+    background: #efefef;
+}
+
+svg .italy {
+    fill: #f00;
+    stroke: #1a0808;
+    stroke-width: 1;
+}
+
+svg .bus-stop-circle {
+    shape-rendering: crispEdges;
+}
+
+svg .bus-stop-circle-over {
+    fill: #fff;
+    shape-rendering: crispEdges;
+}
+
+.axis path, .axis line {
+    fill: none;
+    stroke: black;
+    shape-rendering: crispEdges;
+}
+
+.axis text {
+    font-family: sans-serif;
+    font-size: 11px;
+}
+
+
+/*svg .bar {
+    display: inline-block;
+    width: 20px;
+    height: 80px;
+    background-color: teal;
+    margin: 2px;
+}*/

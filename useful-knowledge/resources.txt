@@ -1,0 +1,8 @@
+Get SHAPE file of different areas of the world:
+	• http://download.geofabrik.de/europe/italy/centro.html#
+
+Convert SHAPE file to GeoJSON:
+	• http://ben.balter.com/2013/06/26/how-to-convert-shapefiles-to-geojson-for-use-on-github/
+
+SHAPE files of ROME:
+	• http://websit.cittametropolitanaroma.gov.it/
