@@ -2,8 +2,10 @@
 var DEBUG_HEATMAP = false;
 
 // Global vars
-var width = window.innerWidth;
-var height = window.innerHeight;
+// var width = window.innerWidth;
+// var height = window.innerHeight;
+var width = screen.width;
+var height = screen.height;
 var currentHotspot;
 var hotspotsArray = [];
 var totalInjuried = 0;
@@ -41,10 +43,10 @@ var purpleGradient = {
     '.03': 'rgba(205, 37, 188, 0.65)',
     '.99': 'rgb(247, 19, 169)'
 }
-var orangeGradient = {
+var yellowGradient = {
     '.01': 'rgba(255, 255, 255, 0)',
-    '.03': 'rgba(238, 178, 60, 0.91)',
-    '.99': 'rgb(247, 122, 19)'
+    '.03': 'rgba(242, 118, 17, 0.91)',
+    '.99': 'rgb(227, 191, 39)'
 }
 var blueGradient = {
     // enter n keys between 0 and 1 here
@@ -56,7 +58,7 @@ var blueGradient = {
 // injuried
 var injuriedHeatmapConfig = {
     container: document.getElementById('heatmapContainer'),
-    radius: 6,
+    radius: 8,
     maxOpacity: .6,
     minOpacity: 0,
     blur: .99,
@@ -68,8 +70,8 @@ var deathsHeatmapConfig = {
     radius: 12,
     maxOpacity: .99,
     minOpacity: 0,
-    blur: .99,
-    gradient: orangeGradient
+    blur: .5,
+    gradient: yellowGradient
 };
 
 var injuriedHeatmap = h337.create(injuriedHeatmapConfig);
@@ -90,6 +92,55 @@ var projection = d3.geoMercator()
 // get screen center in screen space coordinates
 var screenCenter = projection([mapCenter[0], mapCenter[1]]);
 console.log("screenCenter: " + screenCenter[0] + ", " + screenCenter[1]);
+
+// Load zones data
+d3.json("files/rome_zone_urbanistiche_GRA.json", function(err, data) {
+    if (err) return console.log(err);
+
+    var zones = topojson.feature(data, data.objects.rome_zone_urbanistiche_GRA).features;
+    //console.log(zones);
+
+    var path = d3.geoPath()
+        .projection(projection);
+
+    svg.selectAll(".zone")
+        .data(zones)
+        .enter()
+        .append("path")
+        .attr("class", "zone")
+        .attr("d", path)
+        .on("mouseover", onZonesMouseOver)
+        .on("mouseout", function(d, i) {
+            d3.select(this).classed("zone-hover", false);
+        });
+});
+
+function onZonesMouseOver(d, i) {
+    //console.log(d.properties.DEN_Z_URB);
+    d3.select(this).classed("zone-hover", true);
+
+    currentHotspot = d.properties.DEN_Z_URB;
+    //console.log(currentHotspot);
+
+    hotspotsArray.pop();
+    hotspotsArray.push(currentHotspot);
+
+    console.log(hotspotsArray);
+
+    svg.select(".hotspot-text")
+        .remove();
+
+    // Add hotspots text
+    svg.selectAll("hotspot-text")
+        .data(hotspotsArray)
+        .enter()
+        .append("text")
+        .attr("class", "hotspot-text")
+        .text(currentHotspot)
+        .attr("x", width - 40)
+        .attr("y", 40)
+        .attr("text-anchor", "end");
+}
 
 // Load streets data
 d3.json("files/rome_streets.json", function(err, data) {
@@ -152,14 +203,14 @@ d3.json("files/incidenti_stradali_sett_ott_2016.json", function(err, data) {
 
     }
 
-    console.log("total injuried: " + totalInjuried);
-    console.log("total deaths: " + totalDeaths);
-
-    console.log("men: " + totalMenCrashes);
-    console.log("women: " + totalWomenCrashes);
-
-    console.log("deathsHeatData length: " + deathsHeatData.length);
-    console.log(deathsHeatData);
+    // console.log("total injuried: " + totalInjuried);
+    // console.log("total deaths: " + totalDeaths);
+    //
+    // console.log("men: " + totalMenCrashes);
+    // console.log("women: " + totalWomenCrashes);
+    //
+    // console.log("deathsHeatData length: " + deathsHeatData.length);
+    // console.log(deathsHeatData);
 
     // Top right angle text infos
     var totalDeathsText = "Totale morti: " + totalDeaths;
@@ -224,7 +275,10 @@ d3.json("files/incidenti_stradali_sett_ott_2016.json", function(err, data) {
             return xScale(d);
         })
         .attr("height", 18)
-        .attr("fill", "rgb(231, 77, 96)");
+        .attr("class", function(d, i) {
+            if (i == 0) return "bar-deaths";
+            if (i == 1) return "bar-injuried";
+        });
 
     // draw text on the bars
     svg.selectAll(".bar-text")
@@ -244,18 +298,19 @@ d3.json("files/incidenti_stradali_sett_ott_2016.json", function(err, data) {
 
     // draw the heatmaps
     injuriedHeatmap.setData({
-        max: 1,
+        max: 6,
         data: injuriedHeatData
     });
 
     deathsHeatmap.setData({
-        max: 1,
+        max: 1.2,
         data: deathsHeatData
     });
 
 });
 
 // Load rome transport hotspots
+/**
 d3.json("files/rome_transport_hotspots.json", function(err, data) {
     if (err) return console.log(err);
 
@@ -287,6 +342,7 @@ d3.json("files/rome_transport_hotspots.json", function(err, data) {
             d3.select(this).classed("transport-hotspots-over", false);
         });
 });
+*/
 
 function onTrasportHotspotMouseOver(d) {
     d3.select(this).classed("transport-hotspots-over", true);

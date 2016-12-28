@@ -1,43 +1,57 @@
 /** GOOGLE FONTS */
 
-@import url('https://fonts.googleapis.com/css?family=Nunito+Sans');
+@import url('https://fonts.googleapis.com/css?family=Reem+Kufi');
+@import url('https://fonts.googleapis.com/css?family=Raleway');
+
+/* @import url('https://fonts.googleapis.com/css?family=Nunito+Sans'); */
+
+
+/** LOCAL GOOGLE FONTS */
+
+@font-face {
+    font-family: 'Nunito Sans';
+    font-style: normal;
+    font-weight: normal;
+    src: local('Nunito Sans Regular'), local('NunitoSans-Regular'), /* from https://fonts.gstatic.com/s/nunitosans/v1/iJ4p9wO0GDKJ-D5teKuZqmfQcKutQXcIrRfyR5jdjY8.eot */
+    url('files/fonts/Nunito_Sans.eot?#iefix') format('embedded-opentype'), /* from https://fonts.gstatic.com/s/nunitosans/v1/iJ4p9wO0GDKJ-D5teKuZqobN6UDyHWBl620a-IRfuBk.woff */
+    url('files/fonts/Nunito_Sans.woff') format('woff'), /* from https://fonts.gstatic.com/s/nunitosans/v1/iJ4p9wO0GDKJ-D5teKuZqo4P5ICox8Kq3LLUNMylGO4.woff2 */
+    url('files/fonts/Nunito_Sans.woff2') format('woff2'), /* from https://fonts.gstatic.com/l/font?kit=iJ4p9wO0GDKJ-D5teKuZqnNsigHlcrQGNV8nkUSFQfc&skey=60bfdc605ddb00b1&v=v1#NunitoSans */
+    url('files/fonts/Nunito_Sans.svg#NunitoSans') format('svg'), /* from https://fonts.gstatic.com/s/nunitosans/v1/iJ4p9wO0GDKJ-D5teKuZqp0EAVxt0G0biEntp43Qt6E.ttf */
+    url('files/fonts/Nunito_Sans.ttf') format('truetype');
+}
+
+@font-face {
+    font-family: 'Raleway';
+    font-style: normal;
+    font-weight: normal;
+    src: local('Raleway'), local('Raleway-Regular'), /* from https://fonts.gstatic.com/s/raleway/v11/JDau3G46nqY5-B-S9E_nwg.eot */
+    url('Raleway.eot?#iefix') format('embedded-opentype'), /* from https://fonts.gstatic.com/s/raleway/v11/IczWvq5y_Cwwv_rBjOtT0w.woff */
+    url('Raleway.woff') format('woff'), /* from https://fonts.gstatic.com/s/raleway/v11/0dTEPzkLWceF7z0koJaX1A.woff2 */
+    url('Raleway.woff2') format('woff2'), /* from https://fonts.gstatic.com/l/font?kit=IP_NSg73bUZGuyb3zF6qcQ&skey=30a27f2564731c64&v=v11#Raleway */
+    url('Raleway.svg#Raleway') format('svg'), /* from https://fonts.gstatic.com/s/raleway/v11/bIcY3_3JNqUVRAQQRNVteQ.ttf */
+    url('Raleway.ttf') format('truetype');
+}
+
 
 /** SVG ELEMENTS */
 
 svg {
     background: #041B3D;
+    display: block;
+}
+
+svg .bar-injuried {
+    fill: rgb(247, 19, 169);
+}
+
+svg .bar-deaths {
+    fill: rgb(227, 191, 39);
 }
 
 svg .bar-text {
     fill: rgb(255, 255, 255);
     font-family: 'Nunito Sans' sans-serif;
     font-size: 11px;
-}
-
-svg .italy {
-    fill: #f00;
-    stroke: #1a0808;
-    stroke-width: 1;
-}
-
-svg .hotspot-text {
-    fill: #ffffff;
-    font-family: 'Nunito Sans', sans-serif;
-    font-size: 20px;
-}
-
-svg .ui-text {
-    fill: rgb(255, 255, 255);
-    font-family: 'Nunito Sans', sans-serif;
-    font-size: 20px;
-    padding: 4px;
-}
-
-svg .ui-text-city {
-    fill: #E3E41E;
-    font-family: 'Nunito Sans', sans-serif;
-    font-size: 20px;
-    padding: 4px;
 }
 
 svg .bus-stop-circle {
@@ -49,22 +63,62 @@ svg .bus-stop-circle-over {
     shape-rendering: crispEdges;
 }
 
+svg .crash-spot {
+    fill: rgb(227, 15, 40);
+}
+
+svg .hotspot-text {
+    fill: #ffffff;
+    font-family: 'Raleway', sans-serif;
+    font-size: 20px;
+}
+
+svg .italy {
+    fill: #f00;
+    stroke: #1a0808;
+    stroke-width: 1;
+}
+
 svg .street {
     fill: none;
     stroke-width: 0.3;
     stroke: #1ec0d0;
 }
 
-svg .crash-spot {
-    fill: rgb(227, 15, 40);
-}
-
 svg .transport-hotspots {
-    fill: rgb(43, 99, 207);
+    fill: rgba(222, 216, 216, 0.64);
 }
 
 svg .transport-hotspots-over {
-    fill: rgb(48, 212, 241);
+    fill: rgb(255, 255, 255);
+}
+
+svg .ui-text {
+    fill: rgb(255, 255, 255);
+    font-family: 'Raleway', sans-serif;
+    font-size: 20px;
+    padding: 4px;
+}
+
+svg .ui-text-city {
+    fill: #E3E41E;
+    font-family: 'Reem Kufi', sans-serif;
+    font-size: 24px;
+    padding: 4px;
+}
+
+svg .zone {
+    fill: rgba(246, 244, 234, 0.01);
+    stroke-width: 1.0;
+    stroke: rgba(0, 0, 0, 0.1);
+    shape-rendering: optimizeSpeed;
+}
+
+svg .zone-hover {
+    fill: rgba(246, 244, 234, 0.2);
+    stroke-width: 1.0;
+    stroke: rgba(231, 211, 31, 1);
+    shape-rendering: optimizeSpeed;
 }
 
 .axis path, .axis line {
