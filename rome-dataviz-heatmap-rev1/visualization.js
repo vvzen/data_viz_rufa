@@ -2,12 +2,16 @@
 var DEBUG_HEATMAP = false;
 
 // Global vars
-// var width = window.innerWidth;
-// var height = window.innerHeight;
-var width = screen.width;
-var height = screen.height;
+var width = window.innerWidth;
+var height = window.innerHeight;
+// var width = screen.width;
+// var height = screen.height;
 var currentHotspot;
 var hotspotsArray = [];
+var zonesArray = [];
+var currentZonePolygon;
+// topojson feature obj
+var crashesSpots;
 var totalInjuried = 0;
 var totalDeaths = 0;
 var totalWomenCrashes = 0;
@@ -34,8 +38,6 @@ var svg = d3.select("body")
     .attr("id", "svg-container")
     .attr("width", width)
     .attr("height", height);
-
-var mapCenter = [12.5102487, 41.8931614];
 
 // HEATMAP
 var purpleGradient = {
@@ -84,6 +86,9 @@ function myHeatData(x, y, value) {
     this.value = value;
 }
 
+// Rome center: lon, lat
+var mapCenter = [12.5102487, 41.8931614];
+
 var projection = d3.geoMercator()
     .scale(170000)
     .center(mapCenter)
@@ -92,6 +97,25 @@ var projection = d3.geoMercator()
 // get screen center in screen space coordinates
 var screenCenter = projection([mapCenter[0], mapCenter[1]]);
 console.log("screenCenter: " + screenCenter[0] + ", " + screenCenter[1]);
+
+// Object for storing zones name and points in xy coordinates space
+function zonePolygon(name, points) {
+    this.name = name;
+    var xyConvertedPoints = [];
+    // console.log("Creating zone polygon");
+    for (var i = 0; i < points.length; i++) {
+        //console.log(points[i]);
+        for (var p = 0; p < points[i].length; p++) {
+            var currentPoint = points[i][p];
+            var convertedPoint = projection([currentPoint[0], currentPoint[1]]);
+            //console.log("current point: " + currentPoint[0] + ", " + currentPoint[1]);
+            //console.log("converted point: " + convertedPoint[0] + ", " + convertedPoint[1]);
+            xyConvertedPoints.push(convertedPoint);
+        }
+    }
+
+    this.points = xyConvertedPoints;
+}
 
 // Load zones data
 d3.json("files/rome_zone_urbanistiche_GRA.json", function(err, data) {
@@ -103,6 +127,17 @@ d3.json("files/rome_zone_urbanistiche_GRA.json", function(err, data) {
     var path = d3.geoPath()
         .projection(projection);
 
+    // svg.selectAll(".zone")
+    //     .data(zones)
+    //     .enter()
+    //     .append("path")
+    //     .attr("class", "zone")
+    //     .attr("d", path)
+    //     .on("mouseover", onZonesMouseOver)
+    //     .on("mouseout", function(d, i) {
+    //         d3.select(this).classed("zone-hover", false);
+    //     });
+
     svg.selectAll(".zone")
         .data(zones)
         .enter()
@@ -113,33 +148,109 @@ d3.json("files/rome_zone_urbanistiche_GRA.json", function(err, data) {
         .on("mouseout", function(d, i) {
             d3.select(this).classed("zone-hover", false);
         });
+
 });
 
 function onZonesMouseOver(d, i) {
-    //console.log(d.properties.DEN_Z_URB);
+
     d3.select(this).classed("zone-hover", true);
 
-    currentHotspot = d.properties.DEN_Z_URB;
+    var currentZoneName = d.properties.DEN_Z_URB;
     //console.log(currentHotspot);
 
-    hotspotsArray.pop();
-    hotspotsArray.push(currentHotspot);
-
-    console.log(hotspotsArray);
+    zonesArray.pop();
+    zonesArray.push(currentZoneName);
 
     svg.select(".hotspot-text")
         .remove();
 
-    // Add hotspots text
+    // Add zone name on top right angle
     svg.selectAll("hotspot-text")
-        .data(hotspotsArray)
+        .data(zonesArray)
         .enter()
         .append("text")
         .attr("class", "hotspot-text")
-        .text(currentHotspot)
+        .text(currentZoneName)
         .attr("x", width - 40)
         .attr("y", 40)
         .attr("text-anchor", "end");
+
+    // 1. get polygon for current zone
+    currentZonePolygon = new zonePolygon(currentZoneName, d.geometry.coordinates);
+
+    // 2. check which crashes are inside current polygon
+    var totalDeathsInZone = 0;
+    var totalInjuriedInZone = 0;
+    for (var c = 0; c < 100; c++) {
+        var crashCoordinates = [crashesSpots[c].geometry.coordinates[0], crashesSpots[c].geometry.coordinates[1]];
+        var screenCrashCoordinates = projection([crashCoordinates[0], crashCoordinates[1]]);
+        //console.log(screenCrashCoordinates);
+        //console.log(screenCrashCoordinates);
+        //console.log(d3.polygonContains(currentZonePolygon.points, screenCrashCoordinates));
+        if (d3.polygonContains(currentZonePolygon.points, screenCrashCoordinates)) {
+            // track deaths
+            if (crashesSpots[c].properties.Deceduto === -1) {
+                totalDeathsInZone++;
+            }
+            // track injuries
+            // progressivo is 1 for single crashes, and is 2,3,4+ for crashes shared by different cars
+            if (crashesSpots[c].properties.Progressiv === 1) {
+                totalInjuriedInZone += crashesSpots[i].properties.NUM_FERITI;
+            }
+        }
+    }
+
+    console.log("total deaths in zone: " + totalDeathsInZone);
+    console.log("total injuried in zone: " + totalInjuriedInZone);
+
+    var histogramData = [];
+    histogramData.push(totalDeathsInZone);
+    histogramData.push(totalInjuriedInZone);
+
+    // 3. update histogram bars
+    var yBarPadding = 70;
+
+    // draw the histogram bars
+    drawHistogram(histogramData);
+}
+
+function drawHistogram(data) {
+
+    var barHeight = 20;
+    var barPadding = 4;
+    var barCoordinates = [width - 400, 100];
+
+    // var deathsBar = svg.append("rect")
+    //     .attr("class", "bar-deaths")
+    //     .attr("x", deathBarCoordinates[0])
+    //     .attr("y", deathBarCoordinates[1])
+    //     .attr("width", 10)
+    //     .attr("height", barHeight);
+    //
+    // var injuriedBar = svg.append("rect")
+    //     .attr("class", "bar-injuried")
+    //     .attr("x", injuriedBarCoordinates[0])
+    //     .attr("y", injuriedBarCoordinates[1])
+    //     .attr("width", 10)
+    //     .attr("height", barHeight);
+
+    var bars = svg.selectAll(".bar")
+        .data(data)
+        .enter()
+        .append("rect")
+        .attr("class", "bar")
+        .attr("x", function(d) {
+            return barCoordinates[0];
+        })
+        .attr("y", function(d, i) {
+            return barCoordinates[1] + (i * (barHeight + 5));
+        })
+        .attr("width", function(d) {
+            return 10 + d;
+        })
+        .attr("height", function(d) {
+            return barHeight;
+        });
 }
 
 // Load streets data
@@ -175,7 +286,7 @@ d3.json("files/incidenti_stradali_sett_ott_2016.json", function(err, data) {
     var injuriedHeatData = [];
     var deathsHeatData = [];
 
-    var crashesSpots = topojson.feature(data, data.objects.incidenti_stradali_sett_ott_2016).features;
+    crashesSpots = topojson.feature(data, data.objects.incidenti_stradali_sett_ott_2016).features;
     //console.log(crashesSpots);
 
     // Loop through crashes spots
@@ -248,53 +359,56 @@ d3.json("files/incidenti_stradali_sett_ott_2016.json", function(err, data) {
         })
         .attr("text-anchor", "start");
 
-    // add histogram bars
-    var histogramData = [];
-    histogramData.push(totalDeaths);
-    histogramData.push(totalInjuried);
+    /** DEBUGGING
+        // add histogram bars
+        var histogramData = [];
+        histogramData.push(totalDeaths);
+        histogramData.push(totalInjuried);
 
-    var xScale = d3.scaleLinear()
-        .domain([0, d3.max(histogramData)])
-        .range([0, 300])
-        .nice();
+        var xScale = d3.scaleLinear()
+            .domain([0, d3.max(histogramData)])
+            .range([0, 300])
+            .nice();
 
-    var yBarPadding = 70;
+        var yBarPadding = 70;
 
-    // draw the histogram bars
-    var barX = width - 310;
-    svg.selectAll(".bar")
-        .data(histogramData)
-        .enter()
-        .append("rect")
-        .attr("class", "bar")
-        .attr("x", barX)
-        .attr("y", function(d, i) {
-            return yBarPadding + (i * 30);
-        })
-        .attr("width", function(d) {
-            return xScale(d);
-        })
-        .attr("height", 18)
-        .attr("class", function(d, i) {
-            if (i == 0) return "bar-deaths";
-            if (i == 1) return "bar-injuried";
-        });
+        // draw the histogram bars
+        var barX = width - 310;
+        svg.selectAll(".bar")
+            .data(histogramData)
+            .enter()
+            .append("rect")
+            .attr("class", "bar")
+            .attr("x", barX)
+            .attr("y", function(d, i) {
+                return yBarPadding + (i * 30);
+            })
+            .attr("width", function(d) {
+                return xScale(d);
+            })
+            .attr("height", 18)
+            .attr("class", function(d, i) {
+                if (i == 0) return "bar-deaths";
+                if (i == 1) return "bar-injuried";
+            });
 
-    // draw text on the bars
-    svg.selectAll(".bar-text")
-        .data(histogramData)
-        .enter()
-        .append("text")
-        .attr("class", "bar-text")
-        .text(function(d, i) {
-            if (i == 0) return "Morti: " + d;
-            if (i == 1) return "Feriti: " + d;
-        })
-        .attr("x", barX - 10)
-        .attr("y", function(d, i) {
-            return yBarPadding + 14 + (i * 30);
-        })
-        .attr("text-anchor", "end");
+        // draw text on the bars
+        svg.selectAll(".bar-text")
+            .data(histogramData)
+            .enter()
+            .append("text")
+            .attr("class", "bar-text")
+            .text(function(d, i) {
+                if (i == 0) return "Morti: " + d;
+                if (i == 1) return "Feriti: " + d;
+            })
+            .attr("x", barX - 10)
+            .attr("y", function(d, i) {
+                return yBarPadding + 14 + (i * 30);
+            })
+            .attr("text-anchor", "end");
+
+            */
 
     // draw the heatmaps
     injuriedHeatmap.setData({
@@ -344,6 +458,7 @@ d3.json("files/rome_transport_hotspots.json", function(err, data) {
 });
 */
 
+// Update top right UI on transport hotspot mouse over
 function onTrasportHotspotMouseOver(d) {
     d3.select(this).classed("transport-hotspots-over", true);
     currentHotspot = d.properties.Name;

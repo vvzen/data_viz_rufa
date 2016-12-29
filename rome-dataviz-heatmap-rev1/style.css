@@ -1,9 +1,8 @@
 /** GOOGLE FONTS */
 
 @import url('https://fonts.googleapis.com/css?family=Reem+Kufi');
-@import url('https://fonts.googleapis.com/css?family=Raleway');
-
-/* @import url('https://fonts.googleapis.com/css?family=Nunito+Sans'); */
+/* @import url('https://fonts.googleapis.com/css?family=Raleway');
+@import url('https://fonts.googleapis.com/css?family=Nunito+Sans'); */
 
 
 /** LOCAL GOOGLE FONTS */
@@ -25,11 +24,11 @@
     font-style: normal;
     font-weight: normal;
     src: local('Raleway'), local('Raleway-Regular'), /* from https://fonts.gstatic.com/s/raleway/v11/JDau3G46nqY5-B-S9E_nwg.eot */
-    url('Raleway.eot?#iefix') format('embedded-opentype'), /* from https://fonts.gstatic.com/s/raleway/v11/IczWvq5y_Cwwv_rBjOtT0w.woff */
-    url('Raleway.woff') format('woff'), /* from https://fonts.gstatic.com/s/raleway/v11/0dTEPzkLWceF7z0koJaX1A.woff2 */
-    url('Raleway.woff2') format('woff2'), /* from https://fonts.gstatic.com/l/font?kit=IP_NSg73bUZGuyb3zF6qcQ&skey=30a27f2564731c64&v=v11#Raleway */
-    url('Raleway.svg#Raleway') format('svg'), /* from https://fonts.gstatic.com/s/raleway/v11/bIcY3_3JNqUVRAQQRNVteQ.ttf */
-    url('Raleway.ttf') format('truetype');
+    url('files/fonts/Raleway.eot?#iefix') format('embedded-opentype'), /* from https://fonts.gstatic.com/s/raleway/v11/IczWvq5y_Cwwv_rBjOtT0w.woff */
+    url('files/fonts/Raleway.woff') format('woff'), /* from https://fonts.gstatic.com/s/raleway/v11/0dTEPzkLWceF7z0koJaX1A.woff2 */
+    url('files/fonts/Raleway.woff2') format('woff2'), /* from https://fonts.gstatic.com/l/font?kit=IP_NSg73bUZGuyb3zF6qcQ&skey=30a27f2564731c64&v=v11#Raleway */
+    url('files/fonts/Raleway.svg#Raleway') format('svg'), /* from https://fonts.gstatic.com/s/raleway/v11/bIcY3_3JNqUVRAQQRNVteQ.ttf */
+    url('files/fonts/Raleway.ttf') format('truetype');
 }
 
 
@@ -38,6 +37,10 @@
 svg {
     background: #041B3D;
     display: block;
+}
+
+svg .bar {
+    fill: rgb(255, 255, 255);
 }
 
 svg .bar-injuried {
