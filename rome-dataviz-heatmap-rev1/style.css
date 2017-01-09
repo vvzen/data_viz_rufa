@@ -32,6 +32,12 @@
 }
 
 
+/** HTML */
+body, html {
+  margin: 0;
+  height: 100%;
+}
+
 /** SVG ELEMENTS */
 
 svg {
@@ -66,12 +72,26 @@ svg .bus-stop-circle-over {
     shape-rendering: crispEdges;
 }
 
-svg .crash-spot {
+/*svg .crash-spot {
     fill: rgb(227, 15, 40);
+}*/
+
+svg #death.crash{
+  fill: rgba(227, 191, 39, 0.9);
 }
 
-svg .hotspot-text {
+svg #injuried.crash{
+  fill: rgba(247, 19, 169, 0.1);
+}
+
+svg #transport.hotspot-text {
     fill: #ffffff;
+    font-family: 'Raleway', sans-serif;
+    font-size: 20px;
+}
+
+svg #zone.hotspot-text {
+    fill: rgb(227, 228, 30);
     font-family: 'Raleway', sans-serif;
     font-size: 20px;
 }
@@ -85,7 +105,7 @@ svg .italy {
 svg .street {
     fill: none;
     stroke-width: 0.3;
-    stroke: #1ec0d0;
+    stroke: rgb(30, 192, 208);
 }
 
 svg .transport-hotspots {
@@ -104,7 +124,7 @@ svg .ui-text {
 }
 
 svg .ui-text-city {
-    fill: #E3E41E;
+    fill: rgb(246, 236, 2);
     font-family: 'Reem Kufi', sans-serif;
     font-size: 24px;
     padding: 4px;
@@ -113,14 +133,14 @@ svg .ui-text-city {
 svg .zone {
     fill: rgba(246, 244, 234, 0.01);
     stroke-width: 1.0;
-    stroke: rgba(0, 0, 0, 0.1);
+    stroke: rgba(241, 233, 33, 0.1);
     shape-rendering: optimizeSpeed;
 }
 
 svg .zone-hover {
     fill: rgba(246, 244, 234, 0.2);
     stroke-width: 1.0;
-    stroke: rgba(231, 211, 31, 1);
+    stroke: rgba(241, 233, 33, 1);
     shape-rendering: optimizeSpeed;
 }
 

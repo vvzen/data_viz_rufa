@@ -31,11 +31,27 @@ function dist(x1, y1, x2, y2) {
     return Math.sqrt(dx + dy);
 }
 
+// zoom and drag
+var zoom = d3.zoom()
+    .scaleExtent([1, 10])
+    .on("zoom", zoomed);
+
 // create svg
 console.log("Creating svg.. width: " + width + ", height: " + height);
 var svg = d3.select("body")
     .append("svg")
     .attr("id", "svg-container")
+    .attr("width", width)
+    .attr("height", height)
+    .call(zoom);
+
+// container for the visualization
+var vizG = svg.append("g");
+// Add some content to g in order to fix safari bug on zoom
+// see http://stackoverflow.com/questions/40887193/d3-js-zoom-is-not-working-with-mousewheel-in-safari
+vizG.append("rect")
+    .attr("fill", "#fff")
+    .attr("opacity", 0)
     .attr("width", width)
     .attr("height", height);
 
@@ -118,7 +134,7 @@ function zonePolygon(name, points) {
 }
 
 // Load zones data
-d3.json("files/rome_zone_urbanistiche_GRA.json", function(err, data) {
+d3.json("files/rome_zone_urbanistiche_GRA_simplified.json", function(err, data) {
     if (err) return console.log(err);
 
     var zones = topojson.feature(data, data.objects.rome_zone_urbanistiche_GRA).features;
@@ -127,7 +143,7 @@ d3.json("files/rome_zone_urbanistiche_GRA.json", function(err, data) {
     var path = d3.geoPath()
         .projection(projection);
 
-    // svg.selectAll(".zone")
+    // vizG.selectAll(".zone")
     //     .data(zones)
     //     .enter()
     //     .append("path")
@@ -138,7 +154,7 @@ d3.json("files/rome_zone_urbanistiche_GRA.json", function(err, data) {
     //         d3.select(this).classed("zone-hover", false);
     //     });
 
-    svg.selectAll(".zone")
+    vizG.selectAll(".zone")
         .data(zones)
         .enter()
         .append("path")
@@ -170,6 +186,7 @@ function onZonesMouseOver(d, i) {
         .enter()
         .append("text")
         .attr("class", "hotspot-text")
+        .attr("id", "zone")
         .text(currentZoneName)
         .attr("x", width - 40)
         .attr("y", 40)
@@ -206,6 +223,10 @@ function onZonesMouseOver(d, i) {
     var histogramData = [];
     histogramData.push(totalDeathsInZone);
     histogramData.push(totalInjuriedInZone);
+    console.log("Histogram data:");
+    console.log(histogramData);
+
+    //TODO: clean the crashes dataset and create a new one using a simpler crash JSONObject
 
     // 3. update histogram bars
     var yBarPadding = 70;
@@ -214,20 +235,55 @@ function onZonesMouseOver(d, i) {
     drawHistogram(histogramData);
 }
 
+// Draw histogram with deaths and injuried for zone
 function drawHistogram(data) {
 
     var barHeight = 20;
     var barPadding = 4;
     var barCoordinates = [width - 400, 100];
 
-    // var deathsBar = svg.append("rect")
+    // DATA JOIN
+    // Bind selection with data
+    var bars = svg.selectAll(".bar")
+        .data(data);
+
+    // UPDATE
+    // Update old elements as needed
+    bars.attr("width", function(d, i) {
+        console.log(d);
+        return 40;
+    });
+
+    // ENTER
+    // create new element as needed
+    bars.enter()
+        .append("rect")
+        .attr("class", "bar")
+        .attr("x", function(d) {
+            return barCoordinates[0];
+        })
+        .attr("y", function(d, i) {
+            return barCoordinates[1] + (i * (barHeight + 5));
+        })
+        .attr("width", function(d) {
+            return 10 + d;
+        })
+        .attr("height", function(d) {
+            return barHeight;
+        });
+
+    // EXIT
+    // remove old elements
+    bars.exit().remove();
+
+    // var deathsBar = vizG.append("rect")
     //     .attr("class", "bar-deaths")
     //     .attr("x", deathBarCoordinates[0])
     //     .attr("y", deathBarCoordinates[1])
     //     .attr("width", 10)
     //     .attr("height", barHeight);
     //
-    // var injuriedBar = svg.append("rect")
+    // var injuriedBar = vizG.append("rect")
     //     .attr("class", "bar-injuried")
     //     .attr("x", injuriedBarCoordinates[0])
     //     .attr("y", injuriedBarCoordinates[1])
@@ -268,7 +324,7 @@ d3.json("files/rome_streets.json", function(err, data) {
         .projection(projection);
 
     // Draw the streets
-    svg.selectAll(".street")
+    vizG.selectAll(".street")
         .data(streets)
         .enter()
         .append("path")
@@ -277,6 +333,17 @@ d3.json("files/rome_streets.json", function(err, data) {
 
     // console.log(streets);
 });
+
+//TODO: replace realtime rendering of streets data with svg background
+// d3.xml("files/rome-streets.svg", function(err, docFragment) {
+//     if (err) return console.log(err);
+//
+//     // use plain js to extract the node
+//     var streetsSvg = docFragment.getElementsByTagName("svg")[0];
+//     // d3 selection.node() return the DOM node, so we use plain js to append content
+//     vizG.node().appendChild(streetsSvg);
+//
+// });
 
 // Load car crashes
 d3.json("files/incidenti_stradali_sett_ott_2016.json", function(err, data) {
@@ -290,29 +357,60 @@ d3.json("files/incidenti_stradali_sett_ott_2016.json", function(err, data) {
     //console.log(crashesSpots);
 
     // Loop through crashes spots
-    for (var i = 0; i < crashesSpots.length; i++) {
-        var screenCoords = projection([crashesSpots[i].geometry.coordinates[0], crashesSpots[i].geometry.coordinates[1]]);
-        injuriedHeatData.push(new myHeatData(Math.floor(screenCoords[0]), Math.floor(screenCoords[1]), 1));
-        // track deaths
-        if (crashesSpots[i].properties.Deceduto === -1) {
-            //console.log("death event:");
-            //console.log(crashesSpots[i].properties);
-            deathsHeatData.push(new myHeatData(Math.floor(screenCoords[0]), Math.floor(screenCoords[1]), 1));
-            totalDeaths++;
-        }
-        // track injuries
-        // progressivo is 1 for single crashes, and is 2,3,4+ for crashes shared by different cars
-        if (crashesSpots[i].properties.Progressiv === 1) {
-            totalInjuried += crashesSpots[i].properties.NUM_FERITI;
-        }
-        // keep track of gender
-        if (crashesSpots[i].properties.Sesso === "M") {
-            totalMenCrashes++;
-        } else if (crashesSpots[i].properties.Sesso === "F") {
-            totalWomenCrashes++;
-        }
+    // for (var i = 0; i < crashesSpots.length; i++) {
+    //     var screenCoords = projection([crashesSpots[i].geometry.coordinates[0], crashesSpots[i].geometry.coordinates[1]]);
+    //     injuriedHeatData.push(new myHeatData(Math.floor(screenCoords[0]), Math.floor(screenCoords[1]), 1));
+    //     // track deaths
+    //     if (crashesSpots[i].properties.Deceduto === -1) {
+    //         //console.log("death event:");
+    //         //console.log(crashesSpots[i].properties);
+    //         deathsHeatData.push(new myHeatData(Math.floor(screenCoords[0]), Math.floor(screenCoords[1]), 1));
+    //         totalDeaths++;
+    //     }
+    //     // track injuries
+    //     // progressivo is 1 for single crashes, and is 2,3,4+ for crashes shared by different cars
+    //     if (crashesSpots[i].properties.Progressiv === 1) {
+    //         totalInjuried += crashesSpots[i].properties.NUM_FERITI;
+    //     }
+    //     // keep track of gender
+    //     if (crashesSpots[i].properties.Sesso === "M") {
+    //         totalMenCrashes++;
+    //     } else if (crashesSpots[i].properties.Sesso === "F") {
+    //         totalWomenCrashes++;
+    //     }
+    //
+    // }
 
-    }
+    // Add circles
+    var circleSize = 4;
+    vizG.selectAll(".crash")
+        .data(crashesSpots)
+        .enter()
+        .append("circle")
+        .attr("class", "crash")
+        .attr("id", function(d, i) {
+            //console.log(d.properties.Deceduto);
+            if (d.properties.Deceduto === -1) {
+                return "death";
+            } else {
+                return "injuried";
+            }
+        })
+        .attr("cx", function(d, i) {
+            var screenCoords = projection([d.geometry.coordinates[0], d.geometry.coordinates[1]]);
+            return screenCoords[0];
+        })
+        .attr("cy", function(d, i) {
+            var screenCoords = projection([d.geometry.coordinates[0], d.geometry.coordinates[1]]);
+            return screenCoords[1];
+        })
+        .attr("r", function(d, i) {
+            if (d.properties.Deceduto === -1) {
+                return circleSize + circleSize / 2;
+            } else {
+                return circleSize;
+            }
+        });
 
     // console.log("total injuried: " + totalInjuried);
     // console.log("total deaths: " + totalDeaths);
@@ -331,12 +429,6 @@ d3.json("files/incidenti_stradali_sett_ott_2016.json", function(err, data) {
         "ROMA",
         "Settembre/Ottobre 2016"
     ];
-    // var uiTextData = [
-    //     "INCIDENTI STRADALI",
-    //     "Settembre - Ottobre 2016",
-    //     "Fonte: http://dati.comune.roma.it",
-    //     ""
-    // ];
 
     // top left info
     svg.selectAll(".ui-text")
@@ -374,7 +466,7 @@ d3.json("files/incidenti_stradali_sett_ott_2016.json", function(err, data) {
 
         // draw the histogram bars
         var barX = width - 310;
-        svg.selectAll(".bar")
+        vizG.selectAll(".bar")
             .data(histogramData)
             .enter()
             .append("rect")
@@ -393,7 +485,7 @@ d3.json("files/incidenti_stradali_sett_ott_2016.json", function(err, data) {
             });
 
         // draw text on the bars
-        svg.selectAll(".bar-text")
+        vizG.selectAll(".bar-text")
             .data(histogramData)
             .enter()
             .append("text")
@@ -411,20 +503,19 @@ d3.json("files/incidenti_stradali_sett_ott_2016.json", function(err, data) {
             */
 
     // draw the heatmaps
-    injuriedHeatmap.setData({
-        max: 6,
-        data: injuriedHeatData
-    });
-
-    deathsHeatmap.setData({
-        max: 1.2,
-        data: deathsHeatData
-    });
+    // injuriedHeatmap.setData({
+    //     max: 6,
+    //     data: injuriedHeatData
+    // });
+    //
+    // deathsHeatmap.setData({
+    //     max: 1.2,
+    //     data: deathsHeatData
+    // });
 
 });
 
 // Load rome transport hotspots
-/**
 d3.json("files/rome_transport_hotspots.json", function(err, data) {
     if (err) return console.log(err);
 
@@ -435,7 +526,7 @@ d3.json("files/rome_transport_hotspots.json", function(err, data) {
     //console.log(hotspots);
 
     // Draw the hotspots
-    svg.selectAll(".transport-hotspots")
+    vizG.selectAll(".transport-hotspots")
         .data(hotspots)
         .enter()
         .append("circle")
@@ -456,7 +547,6 @@ d3.json("files/rome_transport_hotspots.json", function(err, data) {
             d3.select(this).classed("transport-hotspots-over", false);
         });
 });
-*/
 
 // Update top right UI on transport hotspot mouse over
 function onTrasportHotspotMouseOver(d) {
@@ -467,7 +557,7 @@ function onTrasportHotspotMouseOver(d) {
     hotspotsArray.pop();
     hotspotsArray.push(currentHotspot);
 
-    console.log(hotspotsArray);
+    //console.log(hotspotsArray);
 
     svg.select(".hotspot-text")
         .remove();
@@ -478,38 +568,25 @@ function onTrasportHotspotMouseOver(d) {
         .enter()
         .append("text")
         .attr("class", "hotspot-text")
+        .attr("id", "transport")
         .text(currentHotspot)
         .attr("x", width - 40)
         .attr("y", 40)
         .attr("text-anchor", "end");
 }
 
-// Load bus stops json
-// d3.json("files/rome_bus_stops.json", function(err, data) {
-//     if (err) return console.log(err);
-//
-//     var romeBusStops = topojson.feature(data, data.objects.rome_bus_stops).features;
-//
-//     var heatData = [];
-//
-//     var test = dist(0, 0, 4, 4);
-//     //console.log("test: " + test);
-//
-//     // for (var i = 0; i < 10; i++) {
-//     //     console.log(romeBusStops[i].geometry.coordinates);
-//     // }
-//
-//     // Loop through stops to create injuriedHeatmap
-//     for (var i = 0; i < romeBusStops.length; i++) {
-//         var screenCoords = projection([romeBusStops[i].geometry.coordinates[0], romeBusStops[i].geometry.coordinates[1]]);
-//         //var distanceFromCenter = dist(screenCoords[0], screenCoords[1], screenCenter[0], screenCenter[1]);
-//         //heatData.push(new myHeatData(Math.floor(screenCoords[0]), Math.floor(screenCoords[1]), 1));
-//         //console.log(distanceFromCenter);
-//     }
-//     // var heatMaxValue = d3.max(heatData, function(d) {
-//     //     return d.value - 10;
-//     // });
-//     if (DEBUG_HEATMAP) console.log("heatMaxValue: " + heatMaxValue);
-//     if (DEBUG_HEATMAP) console.log(heatData);
-//
-// });
+// zooming and dragging
+function zoomed() {
+    //console.log("zoomed!");
+    d3.select('#heatmapContainer').attr("transform", d3.event.transform);
+    vizG.attr("transform", d3.event.transform);
+}
+
+// making the viz responsive
+d3.select(window).on("resize", function() {
+    console.log("Window resized!");
+    console.log("new width: " + window.innerWidth + ", new height: " + window.innerHeight);
+
+    svg.attr("width", window.innerWidth)
+        .attr("height", window.innerHeight);
+});
