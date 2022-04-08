@@ -1,4 +1,4 @@
-##Through the streets of Rome - Data Visualization
+## Through the streets of Rome - Data Visualization
 
 Git repository hosting the thesis project for the course ***"L'estetica dei Flussi: Open and Big Data Visualization"*** I attended at Rufa University on fall 2016.
 
